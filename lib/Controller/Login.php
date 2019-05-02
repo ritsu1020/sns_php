@@ -2,7 +2,7 @@
 
 namespace MyApp\Controller;
 
-class Signup extends \MyApp\Controller {
+class Login extends \MyApp\Controller {
 
   public function run() {
     if ($this->isLoggedIn()) {
@@ -20,10 +20,8 @@ class Signup extends \MyApp\Controller {
     // varidate
     try {
       $this->_validate();
-    } catch (\MyApp\Exception\InvalidEmail $e) {
+    } catch (\MyApp\Exception\EmptyPost $e) {
       $this->setErrors('email', $e->getMessage());
-    } catch (\MyApp\Exception\InvalidPassword $e) {
-      $this->setErrors('password', $e->getMessage());
     }
 
     $this->setValues('email', $_POST['email']);
@@ -32,18 +30,21 @@ class Signup extends \MyApp\Controller {
       return;
     } else {
       try {
-        // create user
         $userModel = new \MyApp\Model\User();
-        $userModel->create([
+        $user = $userModel->login([
           'email' => $_POST['email'];
           'password' => $_POST['password']
         ]);
-      } catch (\MyApp\Exception\DuplicateEmail $e) {
-        $this->setErrors('email', $e->getMessage());
+      } catch (\MyApp\Exception\UnmatchEmailOrPassword $e) {
+        $this->setErrors('login', $e->getMessage());
         return;
       }
-      // redirect to login
-      header('Location: ' . SITE_URL . '/login.php');
+
+      // login処理
+      session_regenerate_id(true);
+      $_SESSION['me'] = $user;
+
+      header('Location: ' . SITE_URL);
       exit;
     }
   }
@@ -53,12 +54,14 @@ class Signup extends \MyApp\Controller {
       echo "Invalid Token!";
       exit;
     }
-    if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-      throw new \MyApp\Exception\InvalidEmail();
+
+    if (!isset($_POST['email']) || !isset($_POST['password'])) {
+      echo "Invalid Form!";
+      exit;
     }
 
-    if (!preg_match('/\A[a-zA-Z0-9]+\z/', $_POST['password'])) {
-      throw new \MyApp\Exception\InvalidPassword();
+    if ($_POST['email'] === '' || $_POST['password']) {
+      throw new \MyApp\Exception\EmptyPost();
     }
   }
 }

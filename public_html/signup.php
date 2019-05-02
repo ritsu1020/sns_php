@@ -18,15 +18,19 @@ $app->run();
 </head>
 <body>
   <div id="container">
-    <form action="" method="post">
+    <form action="" method="post" id="signup">
       <p>
-        <input type="text" name="email" placeholder="email">
+        <input type="text" name="email" placeholder="email" value="<?= isset($app->getValues()->email) ?
+        h($app->getValues()->email) : ''; ?>">
       </p>
+      <p class="err"><?= h($app->getErrors('email')); ?></p>
       <p>
         <input type="password" name="password" placeholder="password">
       </p>
-      <div class="btn">Sign Up</div>
+      <p class="err"><?= h($app->getErrors('password')); ?></p>
+      <div class="btn" onclick="document.getElementById('signup').submit();">Sign Up</div>
       <p class="fs12"><a href="/login.php">Log In</a></p>
+      <input type="hidden" name="token" value="<?= h($_SESSION['token']); ?>">
     </form>
   </div>
 </body>
